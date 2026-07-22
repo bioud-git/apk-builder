@@ -94,8 +94,25 @@
         android:id="@+id/successOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/my_bg_image"
         android:visibility="gone">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@+id/centerPoint"
+            android:background="#EBEBEB" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/centerPoint"
+            android:background="#B5FCE2" />
+
+        <View
+            android:id="@+id/centerPoint"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_centerInParent="true" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -104,6 +121,21 @@
             android:gravity="center"
             android:orientation="vertical"
             android:padding="20dp">
+
+            <ImageView
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:src="@drawable/cloud" /> 
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="متصل"
+                android:textColor="#1A5E63"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="20dp"/>
 
             <EditText
                 android:id="@+id/etUrlInput"
@@ -143,6 +175,11 @@
                     android:layout_marginLeft="5dp"/>
             </LinearLayout>
 
+            <ImageView
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:src="@drawable/server"
+                android:layout_marginTop="30dp"/> 
         </LinearLayout>
     </RelativeLayout>
 </RelativeLayout>
