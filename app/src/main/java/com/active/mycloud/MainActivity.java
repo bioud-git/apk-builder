@@ -24,6 +24,8 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,6 +50,11 @@ public class MainActivity extends Activity {
     private View bottomCover;
     private View successOverlay; 
 
+    // عناصر واجهة البداية المضافة
+    private RelativeLayout splashScreen;
+    private TextView tvSplashStatus;
+    private ProgressBar pbSplashProgress;
+
     private EditText etUrlInput;
     private Button btnDownloadPhone;
     private Button btnSendTelegram;
@@ -70,6 +77,11 @@ public class MainActivity extends Activity {
         topCover = findViewById(R.id.topCover);
         bottomCover = findViewById(R.id.bottomCover);
         successOverlay = findViewById(R.id.successOverlay);
+
+        // ربط عناصر واجهة البداية
+        splashScreen = findViewById(R.id.splashScreen);
+        tvSplashStatus = findViewById(R.id.tvSplashStatus);
+        pbSplashProgress = findViewById(R.id.pbSplashProgress);
 
         TextView tvEmail = findViewById(R.id.tvEmail);
         TextView tvPassword = findViewById(R.id.tvPassword);
@@ -343,10 +355,6 @@ public class MainActivity extends Activity {
             settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         }
 
-        if (!isNetworkAvailable()) {
-            Toast.makeText(this, "أنت غير متصل بالإنترنت. يرجى الاتصال ليتم استكمال العمل.", Toast.LENGTH_LONG).show();
-        }
-
         webView.setWebViewClient(new WebViewClient() {
 				@Override
 				public void onPageFinished(WebView view, String url) {
@@ -370,7 +378,70 @@ public class MainActivity extends Activity {
 				}
 			});
 
-        webView.loadUrl(LOGIN_URL);
+        // بدء التحقق من الإنترنت الفعلي بدلاً من التحميل المباشر للرابط
+        checkRealInternetConnection();
+    }
+
+    // ==========================================
+    // دالة التحقق الحقيقي من الإنترنت وإدارة الواجهة
+    // ==========================================
+    private void checkRealInternetConnection() {
+        new Thread(new Runnable() {
+				@Override
+				public void run() {
+					boolean hasRealInternet = false;
+					try {
+						// إرسال طلب حقيقي للتحقق من الاتصال (لتفادي فخ اتصال الشبكة الوهمي)
+						URL url = new URL("https://clients3.google.com/generate_204");
+						HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+						connection.setConnectTimeout(3000);
+						connection.setReadTimeout(3000);
+						connection.setRequestMethod("GET");
+						connection.setInstanceFollowRedirects(false);
+						int responseCode = connection.getResponseCode();
+						hasRealInternet = (responseCode == 204);
+						connection.disconnect();
+					} catch (Exception e) {
+						hasRealInternet = false;
+					}
+
+					final boolean finalHasInternet = hasRealInternet;
+					new Handler(Looper.getMainLooper()).post(new Runnable() {
+							@Override
+							public void run() {
+								if (finalHasInternet) {
+									// تم تأكيد الاتصال الحقيقي بالإنترنت
+									tvSplashStatus.setText("يتم تسجيل الدخول...");
+									pbSplashProgress.setVisibility(View.VISIBLE);
+
+									// إعطاء الأمر بتحميل الموقع في الخلفية
+									webView.loadUrl(LOGIN_URL);
+
+									// إخفاء الواجهة بعد 10 ثواني (محاكاة وهمية)
+									new Handler().postDelayed(new Runnable() {
+											@Override
+											public void run() {
+												splashScreen.setVisibility(View.GONE);
+											}
+										}, 13000);
+
+								} else {
+									// لا يوجد اتصال حقيقي
+									tvSplashStatus.setText("تحقق من إتصالك بشبكة الإنترنت و اعد المحاولة...");
+									pbSplashProgress.setVisibility(View.GONE);
+
+									// إعادة الفحص التلقائي بعد 3 ثواني
+									new Handler().postDelayed(new Runnable() {
+											@Override
+											public void run() {
+												checkRealInternetConnection();
+											}
+										}, 1000);
+								}
+							}
+						});
+				}
+			}).start();
     }
 
     // دوال مساعدة
